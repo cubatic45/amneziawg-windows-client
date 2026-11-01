@@ -672,6 +672,10 @@ func (hsa *highlightSpanArray) highlightValue(parent, s stringSpan, section fiel
 			hsa.append(parent.s, s, highlightError)
 			break
 		}
+		if conf.ValidSRVEndpoint(unsafe.String(s.s, s.len)) {
+			hsa.append(parent.s, s, highlightHost)
+			break
+		}
 		colon := s.len
 		for colon > 0 {
 			colon--

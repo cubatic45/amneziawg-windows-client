@@ -18,6 +18,8 @@ jobs:
       - name: Test configuration and resolver on Windows
         working-directory: srv-backend
         run: go test -v ./conf -run 'TestSRV|TestParse|TestFrom'
+      - name: Test configuration editor highlighting
+        run: go test -v ./ui/syntax
       - name: Live Windows system DNS query
         working-directory: srv-backend
         env:
