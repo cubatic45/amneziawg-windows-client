@@ -40,9 +40,9 @@ if exist .deps\prepared goto :render
 		echo [+] Regenerating files
 		go generate ./... || exit /b 1
 	)
-	call :build_plat x86 i686 386 || goto :error
+	if not "%SRV_X64_ONLY%"=="1" call :build_plat x86 i686 386 || goto :error
 	call :build_plat amd64 x86_64 amd64 || goto :error
-	call :build_plat arm64 aarch64 arm64 || goto :error
+	if not "%SRV_X64_ONLY%"=="1" call :build_plat arm64 aarch64 arm64 || goto :error
 
 :sign
 	if exist .\sign.bat call .\sign.bat

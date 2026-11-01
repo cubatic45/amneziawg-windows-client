@@ -21,6 +21,7 @@ require (
 )
 
 replace (
+	github.com/amnezia-vpn/amneziawg-windows/v3 => ./srv-backend
 	github.com/lxn/walk => golang.zx2c4.com/wireguard/windows v0.0.0-20210121140954-e7fc19d483bd
 	github.com/lxn/win => golang.zx2c4.com/wireguard/windows v0.0.0-20210224134948-620c54ef6199
 )

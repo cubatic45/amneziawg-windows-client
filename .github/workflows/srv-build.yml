@@ -1,0 +1,45 @@
+name: SRV Windows x64 test build
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/dns-srv-endpoints]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      SRV_X64_ONLY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.14'
+      - name: Test configuration and resolver on Windows
+        working-directory: srv-backend
+        run: go test -v ./conf -run 'TestSRV|TestParse|TestFrom'
+      - name: Live Windows system DNS query
+        working-directory: srv-backend
+        env:
+          SRV_LIVE_DNS: '1'
+        run: go test -v ./conf -run '^TestSRVLiveDNS$' -count=1
+      - name: Build x64 GUI and tools
+        shell: cmd
+        run: build.bat
+      - name: Build x64 MSI
+        shell: cmd
+        run: installer\build.bat
+      - name: Inspect and package binaries
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item installer/dist/*amd64*.msi dist/
+          Compress-Archive -Path amd64/* -DestinationPath dist/amneziawg-srv-windows-x64-portable.zip
+          Get-ChildItem dist | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
+          Get-Item amd64/amneziawg.exe | ForEach-Object { $_.VersionInfo | Format-List }
+          Get-AuthenticodeSignature amd64/wintun.dll | Format-List Status,StatusMessage,SignerCertificate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amneziawg-srv-windows-x64
+          path: dist/*
+          retention-days: 30

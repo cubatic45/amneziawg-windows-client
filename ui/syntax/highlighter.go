@@ -9,7 +9,9 @@
 package syntax
 
 import (
+	"github.com/amnezia-vpn/amneziawg-windows/v3/conf"
 	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/amnezia-vpn/amneziawg-go/v3/device"
@@ -325,6 +327,11 @@ func (s stringSpan) isValidScope() bool {
 }
 
 func (s stringSpan) isValidEndpoint() bool {
+	value := unsafe.String(s.s, s.len)
+	if strings.HasPrefix(value, "srv://") {
+		return conf.ValidSRVEndpoint(value)
+	}
+
 	if s.len == 0 {
 		return false
 	}

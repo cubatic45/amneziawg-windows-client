@@ -37,9 +37,9 @@ if exist .deps\prepared goto :build
 	set CFLAGS=-O3 -Wall -std=gnu11 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -municode -DUNICODE -D_UNICODE -DNDEBUG
 	set LDFLAGS=-shared -s -Wl,--kill-at -Wl,--major-os-version=6 -Wl,--minor-os-version=1 -Wl,--major-subsystem-version=6 -Wl,--minor-subsystem-version=1 -Wl,--tsaware -Wl,--dynamicbase -Wl,--nxcompat -Wl,--export-all-symbols
 	set LDLIBS=-lmsi -lole32 -lshlwapi -lshell32 -luuid -lntdll
-	call :msi x86 i686 x86 || goto :error
+	if not "%SRV_X64_ONLY%"=="1" call :msi x86 i686 x86 || goto :error
 	call :msi amd64 x86_64 x64 || goto :error
-	call :msi arm64 aarch64 arm64 || goto :error
+	if not "%SRV_X64_ONLY%"=="1" call :msi arm64 aarch64 arm64 || goto :error
 	if "%SigningProvider%"=="" goto :success
 	if "%TimestampServer%"=="" goto :success
 	echo [+] Signing
