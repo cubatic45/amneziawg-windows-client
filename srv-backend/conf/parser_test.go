@@ -80,8 +80,8 @@ func TestFromWgQuick(t *testing.T) {
 	if noError(t, err) {
 
 		lenTest(t, conf.Interface.Addresses, 2)
-		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 10, 0, 1), uint8(16)})
-		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 192, 122, 1), uint8(24)})
+		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 10, 0, 1).To4(), uint8(16)})
+		contains(t, conf.Interface.Addresses, IPCidr{net.IPv4(10, 192, 122, 1).To4(), uint8(24)})
 		equal(t, "yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=", conf.Interface.PrivateKey.String())
 		equal(t, uint16(51820), conf.Interface.ListenPort)
 

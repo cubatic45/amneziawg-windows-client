@@ -23,12 +23,29 @@ jobs:
         env:
           SRV_LIVE_DNS: '1'
         run: go test -v ./conf -run '^TestSRVLiveDNS$' -count=1
+      - name: Test endpoint refresh without requiring a driver
+        working-directory: srv-backend/tunnel
+        run: go test -v srv.go srv_test.go
       - name: Build x64 GUI and tools
         shell: cmd
         run: build.bat
       - name: Build x64 MSI
         shell: cmd
         run: installer\build.bat
+      - name: Smoke-test MSI installation on disposable Windows runner
+        shell: pwsh
+        run: |
+          $msi = (Get-ChildItem installer/dist/*amd64*.msi | Select-Object -First 1).FullName
+          $install = Start-Process msiexec.exe -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$env:RUNNER_TEMP/awg-install.log`"") -Wait -PassThru
+          if ($install.ExitCode -notin @(0,3010)) {
+            Get-Content "$env:RUNNER_TEMP/awg-install.log" -Tail 100
+            throw "MSI install failed: $($install.ExitCode)"
+          }
+          $exe = "$env:ProgramFiles/AmneziaWG/amneziawg.exe"
+          if (!(Test-Path $exe)) { throw 'Installed GUI executable is missing' }
+          Get-Service '*Amnezia*' | Format-Table Name,Status
+          $uninstall = Start-Process msiexec.exe -ArgumentList @('/x', "`"$msi`"", '/qn', '/norestart') -Wait -PassThru
+          if ($uninstall.ExitCode -notin @(0,3010)) { throw "MSI uninstall failed: $($uninstall.ExitCode)" }
       - name: Inspect and package binaries
         shell: pwsh
         run: |

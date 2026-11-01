@@ -45,14 +45,14 @@ func startSRVRefresh(config *conf.Config, last map[conf.Key]conf.Endpoint, apply
 						log.Printf("SRV refresh failed for %s; keeping current endpoint: %v", peer.Endpoint.Host, err)
 						continue
 					}
-					if endpoint == last[peer.PublicKey] {
+					changed, updateErr := applySRVEndpoint(peer.PublicKey, endpoint, last, apply)
+					if updateErr != nil {
+						log.Printf("SRV endpoint update failed: %v", updateErr)
 						continue
 					}
-					if err := apply(srvUpdate(peer.PublicKey, endpoint)); err != nil {
-						log.Printf("SRV endpoint update failed: %v", err)
+					if !changed {
 						continue
 					}
-					last[peer.PublicKey] = endpoint
 					log.Printf("SRV endpoint refreshed: %s -> %s", strings.TrimPrefix(peer.Endpoint.Host, "srv://"), endpoint.String())
 				}
 			}
@@ -60,4 +60,17 @@ func startSRVRefresh(config *conf.Config, last map[conf.Key]conf.Endpoint, apply
 	}()
 	// Stop before the service closes the device; in-flight DNS has a 10s deadline.
 	return func() { close(stop); <-done }
+}
+
+// Cache the DNS-selected endpoint only after a successful device update. Comparing
+// against this cache preserves endpoints learned by authenticated roaming.
+func applySRVEndpoint(key conf.Key, endpoint conf.Endpoint, last map[conf.Key]conf.Endpoint, apply func(string) error) (bool, error) {
+	if endpoint == last[key] {
+		return false, nil
+	}
+	if err := apply(srvUpdate(key, endpoint)); err != nil {
+		return false, err
+	}
+	last[key] = endpoint
+	return true, nil
 }
